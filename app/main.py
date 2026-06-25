@@ -1,160 +1,138 @@
-from fastapi import FastAPI, HTTPException, status
+from database import create_table, add_student, get_students
+from fastapi import FastAPI
 from pydantic import BaseModel
-from typing import Optional
-import sys
-import os
 
+app = FastAPI()
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "app"))
-import database
+create_table()
 
-app = FastAPI(title="Extended School Registration API")
-
-database.create_table()
 
 
 class Student(BaseModel):
     name: str
     age: int
-    country: str
     email: str
+    country: str
     id_number: int
-
 
 class Teacher(BaseModel):
     name: str
     email: str
     department: str
-    office_number: str
-    employee_id: int
-
+    salary: float
+    id_number: int
 
 class Course(BaseModel):
     title: str
-    course_code: str
+    code: str
     credits: int
     department: str
-    teacher_id: Optional[int] = None
+    max_capacity: int
 
 
-@app.get("/")
-def home():
-    return {"message": "Welcome to my updated school server"}
+
+
+
+@app.post("/students")
+def register_student(student: Student):
+    add_student(student.name, student.age, student.email, student.country, student.id_number)
+    return {"message": "Student registered", "student": student}
 
 @app.get("/students")
 def list_students():
-    raw_students = database.get_students()
-    return [dict(row) for row in raw_students]
+    students = get_students()
+    return students
 
 
-@app.post("/students", status_code=status.HTTP_201_CREATED)
-def register_student(student: Student):
-    database.add_student(
-        student.name, student.age, student.email, student.country, student.id_number
-    )
-    return {"message": "Student registered successfully", "student": student}
+
+
+
+@app.post("/teachers")
+def register_teacher(teacher: Teacher):
+    from database import add_teacher
+    add_teacher(teacher.name, teacher.email, teacher.department, teacher.salary, teacher.id_number)
+    return {"message": "Teacher registered", "teacher": teacher}
+
+@app.get("/teachers")
+def list_teachers():
+    from database import get_teachers
+    teachers = get_teachers()
+    return teachers
+
+
+
+
+
+@app.post("/courses")
+def register_course(course: Course):
+    from database import add_course
+    add_course(course.title, course.code, course.credits, course.department, course.max_capacity)
+    return {"message": "Course registered", "course": course}
+
+@app.get("/courses")
+def list_courses():
+    from database import get_courses
+    courses = get_courses()
+    return courses
+
+from fastapi import FastAPI, HTTPException
+
 
 
 @app.put("/students/{student_id}")
 def edit_student(student_id: int, student: Student):
-    updated = database.update_student(
-        student_id,
-        student.name,
-        student.age,
-        student.email,
-        student.country,
-        student.id_number,
-    )
+    from database import update_student
+    updated = update_student(student_id, student.name, student.age, student.email, student.country, student.id_number)
     if not updated:
         raise HTTPException(status_code=404, detail="Student not found")
-    return {"message": "Student updated successfully"}
-
+    return {"message": "Student updated successfully", "student": student}
 
 @app.delete("/students/{student_id}")
 def remove_student(student_id: int):
-    deleted = database.delete_student(student_id)
+    from database import delete_student
+    deleted = delete_student(student_id)
     if not deleted:
         raise HTTPException(status_code=404, detail="Student not found")
     return {"message": "Student deleted successfully"}
 
 
-@app.get("/teachers")
-def list_teachers():
-    raw_teachers = database.get_teachers()
-    return [dict(row) for row in raw_teachers]
-
-
-@app.post("/teachers", status_code=status.HTTP_201_CREATED)
-def register_teacher(teacher: Teacher):
-    database.add_teacher(
-        teacher.name,
-        teacher.email,
-        teacher.department,
-        teacher.office_number,
-        teacher.employee_id,
-    )
-    return {"message": "Teacher registered successfully", "teacher": teacher}
-
 
 @app.put("/teachers/{teacher_id}")
 def edit_teacher(teacher_id: int, teacher: Teacher):
-    updated = database.update_teacher(
-        teacher_id,
-        teacher.name,
-        teacher.email,
-        teacher.department,
-        teacher.office_number,
-        teacher.employee_id,
-    )
+    from database import update_teacher
+    updated = update_teacher(teacher_id, teacher.name, teacher.email, teacher.department, teacher.salary, teacher.id_number)
     if not updated:
         raise HTTPException(status_code=404, detail="Teacher not found")
-    return {"message": "Teacher updated successfully"}
+    return {"message": "Teacher updated successfully", "teacher": teacher}
+
 
 
 @app.delete("/teachers/{teacher_id}")
 def remove_teacher(teacher_id: int):
-    deleted = database.delete_teacher(teacher_id)
+    from database import delete_teacher
+    deleted = delete_teacher(teacher_id)
     if not deleted:
         raise HTTPException(status_code=404, detail="Teacher not found")
     return {"message": "Teacher deleted successfully"}
 
 
-@app.get("/courses")
-def list_courses():
-    raw_courses = database.get_courses()
-    return [dict(row) for row in raw_courses]
 
-
-@app.post("/courses", status_code=status.HTTP_201_CREATED)
-def register_course(course: Course):
-    database.add_course(
-        course.title,
-        course.course_code,
-        course.credits,
-        course.department,
-        course.teacher_id,
-    )
-    return {"message": "Course registered successfully", "course": course}
 
 
 @app.put("/courses/{course_id}")
 def edit_course(course_id: int, course: Course):
-    updated = database.update_course(
-        course_id,
-        course.title,
-        course.course_code,
-        course.credits,
-        course.department,
-        course.teacher_id,
-    )
+    from database import update_course
+    updated = update_course(course_id, course.title, course.code, course.credits, course.department, course.max_capacity)
     if not updated:
         raise HTTPException(status_code=404, detail="Course not found")
-    return {"message": "Course updated successfully"}
+    return {"message": "Course updated successfully", "course": course}
+
 
 
 @app.delete("/courses/{course_id}")
 def remove_course(course_id: int):
-    deleted = database.delete_course(course_id)
+    from database import delete_course
+    deleted = delete_course(course_id)
     if not deleted:
         raise HTTPException(status_code=404, detail="Course not found")
     return {"message": "Course deleted successfully"}
