@@ -4,7 +4,7 @@ from typing import Optional
 import sys
 import os
 
-# Add app folder to path so we can import database
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "app"))
 import database
 
@@ -41,8 +41,6 @@ class Course(BaseModel):
 def home():
     return {"message": "Welcome to my updated school server"}
 
-
-#  STUDENTS
 @app.get("/students")
 def list_students():
     raw_students = database.get_students()
@@ -80,7 +78,6 @@ def remove_student(student_id: int):
     return {"message": "Student deleted successfully"}
 
 
-# TEACHERS
 @app.get("/teachers")
 def list_teachers():
     raw_teachers = database.get_teachers()
@@ -122,7 +119,6 @@ def remove_teacher(teacher_id: int):
     return {"message": "Teacher deleted successfully"}
 
 
-# courses
 @app.get("/courses")
 def list_courses():
     raw_courses = database.get_courses()
